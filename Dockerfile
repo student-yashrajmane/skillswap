@@ -1,14 +1,12 @@
-# Use official Eclipse Temurin OpenJDK 17 image
-FROM eclipse-temurin:17-jdk
-
-# Set working directory inside container
+# Stage 1: Build the JAR
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copy the built JAR file into the container
-COPY target/SkillSwap-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the port your application listens on
-EXPOSE 5051
-
-# Run the JAR file
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Stage 2: Run the app
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]
